@@ -18,7 +18,10 @@ import logging
 import os
 import sys
 
+from ers import ERS
+
 from gi.repository import GObject
+
 import xapian
 from xapian import WritableDatabase, Document, Enquire, Query
 
@@ -239,7 +242,10 @@ class IndexStore(object):
         self._index_updated_path = os.path.join(root_path,
                                                 'index_updated')
         self._std_index_path = layoutmanager.get_instance().get_index_path()
-	self._index_path = self._std_index_path
+        self._index_path = self._std_index_path
+        
+        # Create an instance of ERS
+        self._ers = ERS()        
 
     def open_index(self, temp_path=False):
         # callers to open_index must be able to
@@ -282,29 +288,39 @@ class IndexStore(object):
             os.remove(os.path.join(self._index_path, f))
 
     def contains(self, uid):
-        postings = self._database.postlist(_PREFIX_FULL_VALUE + \
-            _PREFIX_UID + uid)
-        try:
-            __ = postings.next()
-        except StopIteration:
-            return False
-        return True
+        '''
+        Check if there is a journal entry with the given UID
+        '''
+        # Name of the entry
+        entity_name = layoutmanager.get_instance().get_entity_name(uid)
+
+        # Tells if the UID is in the store or not
+        return self._ers.contains_entity(entity_name)
 
     def store(self, uid, properties):
-        document = Document()
-        document.add_value(_VALUE_UID, uid)
-        term_generator = TermGenerator()
-        term_generator.index_document(document, properties)
+        '''
+        Add a document to the index
+        '''
+        #document = Document()
+        #document.add_value(_VALUE_UID, uid)
+        #term_generator = TermGenerator()
+        #term_generator.index_document(document, properties)
 
-        if not self.contains(uid):
-            self._database.add_document(document)
-        else:
-            self._database.replace_document(_PREFIX_FULL_VALUE + \
-                _PREFIX_UID + uid, document)
-
-        self._flush(True)
+        #if not self.contains(uid):
+        #    self._database.add_document(document)
+        #else:
+        #    self._database.replace_document(_PREFIX_FULL_VALUE + \
+        #        _PREFIX_UID + uid, document)
+        #
+        #self._flush(True)
+        pass
 
     def find(self, query):
+        '''
+        Get a list of UIDs matching a query
+        '''
+        logging.warn("Query " + str(query))
+        
         offset = query.pop('offset', 0)
         limit = query.pop('limit', MAX_QUERY_LIMIT)
         order_by = query.pop('order_by', [])
@@ -312,43 +328,21 @@ class IndexStore(object):
 
         query_parser = QueryParser()
         query_parser.set_database(self._database)
-        enquire = Enquire(self._database)
-        enquire.set_query(query_parser.parse_query(query, query_string))
+        parsed_query = query_parser.parse_query(query, query_string)
+        
+        logging.warn("Parsed query " + str(parsed_query))
 
         # This will assure that the results count is exact.
         check_at_least = offset + limit + 1
 
-        if not order_by:
-            order_by = '+timestamp'
-        else:
-            order_by = order_by[0]
+        # TODO : Implement order by
+        logging.warn('Unsupported property for sorting: %s', order_by)
 
-        if order_by == '+timestamp':
-            enquire.set_sort_by_value(_VALUE_TIMESTAMP, True)
-        elif order_by == '-timestamp':
-            enquire.set_sort_by_value(_VALUE_TIMESTAMP, False)
-        elif order_by == '+title':
-            enquire.set_sort_by_value(_VALUE_TITLE, True)
-        elif order_by == '-title':
-            enquire.set_sort_by_value(_VALUE_TITLE, False)
-        elif order_by == '+filesize':
-            enquire.set_sort_by_value(_VALUE_FILESIZE, True)
-        elif order_by == '-filesize':
-            enquire.set_sort_by_value(_VALUE_FILESIZE, False)
-        elif order_by == '+creation_time':
-            enquire.set_sort_by_value(_VALUE_CREATION_TIME, True)
-        elif order_by == '-creation_time':
-            enquire.set_sort_by_value(_VALUE_CREATION_TIME, False)
-        else:
-            logging.warning('Unsupported property for sorting: %s', order_by)
-
-        query_result = enquire.get_mset(offset, limit, check_at_least)
-        total_count = query_result.get_matches_estimated()
-
+        results = self._ers.search('uid')
+        logging.warn("Found " + str(results))
+        
+        total_count = 0
         uids = []
-        for hit in query_result:
-            uids.append(hit.document.get_value(_VALUE_UID))
-
         return (uids, total_count)
 
     def delete(self, uid):

@@ -16,6 +16,7 @@
 
 import os
 import logging
+import getpass
 
 from sugar3 import env
 
@@ -41,6 +42,13 @@ class LayoutManager(object):
         if not os.path.exists(path):
             os.makedirs(path)
 
+    def get_entity_name(self, uid):
+        '''
+        Maps a UID into an entity name for ERS
+        '''
+        entity_name = 'urn:ers:app:DataStore:' + getpass.getuser() + ':' + uid
+        return entity_name
+    
     def get_version(self):
         version_path = os.path.join(self._root_path, 'version')
         version = 0
