@@ -46,7 +46,8 @@ class LayoutManager(object):
         '''
         Maps a UID into an entity name for ERS
         '''
-        entity_name = 'urn:ers:app:DataStore:' + getpass.getuser() + ':' + uid
+        # ' + getpass.getuser()
+        entity_name = 'urn:ers:app:DataStore:' + uid
         return entity_name
     
     def get_version(self):

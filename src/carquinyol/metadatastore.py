@@ -1,5 +1,4 @@
 import logging
-import dbus
 
 from ers import ERS
 from carquinyol import layoutmanager
@@ -20,27 +19,34 @@ class MetadataStore(object):
         '''
         Create or update an entry to the journal
         '''
-        logging.warn("Add {}".format(uid))
-        logging.warn("Add {}".format(metadata))
-        
         # Name of the entry
         entity_name = layoutmanager.get_instance().get_entity_name(uid)
 
         # Get or create the entity
+        update_stats = False
         entity = None
         if self._ers.entity_exist(entity_name):
             entity = self._ers.get_entity(entity_name)
         else:
             entity = self._ers.create_entity(entity_name)
-    
+            update_stats = True
+        
+        # If we need to update the stats, do it
+        if update_stats and 'activity' in metadata:
+            stats_entity_name = 'urn:ers:app:{}:activityStats'.format(metadata['activity'])
+            stats_entity = None
+            if self._ers.entity_exist(stats_entity_name):
+                stats_entity = self._ers.get_entity(stats_entity_name)
+            else:
+                stats_entity = self._ers.create_entity(stats_entity_name)
+                stats_entity.set_property_value('activity', metadata['activity'])
+            stats_entity.add_property_value('usage', entity_name)
+            self._ers.persist_entity(stats_entity)
+        
         # Update the description of the entity
         metadata['uid'] = str(uid)
         for key, value in metadata.items():
             entity.set_property_value(key, value, private=True)
-            #if type(value) == dbus.Int32 or type(value) == dbus.String or (str(type(value)) in ["<type 'str'>", "<type 'int'>"]):
-            #    entity.set_property_value(key, value, private=True)
-            #else:
-            #    logging.warn("Skipped " + key + "(" + str(type(value)) + ")")
     
         # Persist the result
         self._ers.persist_entity(entity)
@@ -51,6 +57,7 @@ class MetadataStore(object):
         '''
         # Name of the entry        
         entity_name = layoutmanager.get_instance().get_entity_name(uid)
+        
         # Get all the (accessible) documents describing that identifier
         entity = self._ers.get_entity(entity_name)
         
@@ -97,10 +104,10 @@ class MetadataStore(object):
         entity = self._ers.get_entity(entity_name)
 
         # Set new value
-        if isinstance(value, unicode):
-            value = value.encode('utf-8')
-        elif not isinstance(value, basestring):
-            value = str(value)
+        #if isinstance(value, unicode):
+        #    value = value.encode('utf-8')
+        #elif not isinstance(value, basestring):
+        #    value = str(value)
         entity.set_property_value(key, value, private=True)
         
         # Persist
