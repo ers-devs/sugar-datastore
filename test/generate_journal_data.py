@@ -12,7 +12,7 @@ SEED = 'data/journals_data.csv'
 
 # The output generated
 OUTPUT = 'data/expanded_journal.csv'
-OUTPUT_SIZE = 2000
+OUTPUT_SIZE = 1000
 
 # Create a pretty printer for debugging
 pp = pprint.PrettyPrinter(indent=2)
@@ -88,6 +88,7 @@ def go():
         # Store it
         entries.append(new_entry)
         
+    print "Generated {} journal entries".format(len(entries))
     
     # Write the journal data
     with open(OUTPUT, 'wb') as csvfile:
