@@ -16,8 +16,3 @@ AM_CPPFLAGS = 			\
 
 AM_LDFLAGS = -module -avoid-version
 
-pkgpyexecdir = $(pythondir)/carquinyol
-pkgpyexec_LTLIBRARIES = metadatareader.la
-
-metadatareader_la_SOURCES = 	\
-	metadatareader.c
