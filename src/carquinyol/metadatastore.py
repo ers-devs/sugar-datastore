@@ -1,6 +1,6 @@
 import logging
 
-from ers import ERS
+from ers.api import ERS
 from carquinyol import layoutmanager
 
 MAX_SIZE = 256
@@ -26,7 +26,7 @@ class MetadataStore(object):
         update_stats = False
         entity = None
         if self._ers.entity_exist(entity_name):
-            entity = self._ers.get_entity(entity_name)
+            entity = self._ers.get_entity(entity_name, local=True)
         else:
             entity = self._ers.create_entity(entity_name)
             update_stats = True
@@ -36,7 +36,7 @@ class MetadataStore(object):
             stats_entity_name = 'urn:ers:app:{}:activityStats'.format(metadata['activity'])
             stats_entity = None
             if self._ers.entity_exist(stats_entity_name):
-                stats_entity = self._ers.get_entity(stats_entity_name)
+                stats_entity = self._ers.get_entity(stats_entity_name, local=True)
             else:
                 stats_entity = self._ers.create_entity(stats_entity_name)
                 stats_entity.set_property_value('activity', metadata['activity'])

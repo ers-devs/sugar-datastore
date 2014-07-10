@@ -9,11 +9,11 @@ import binascii
 
 # Prefer ../ers-node/ers over installed versions
 TESTS_PATH = os.path.dirname(os.path.realpath(__file__))
-ERS_PATH = os.path.dirname(TESTS_PATH) + '/../ers-node/ers'
+ERS_PATH = os.path.dirname(TESTS_PATH) + '/../ers-node'
 sys.path.insert(0, ERS_PATH)
 
-# Same for the datastore
-DATASTORE_PATH = os.path.dirname(TESTS_PATH) + '/../src/carquinyol'
+## Same for the datastore
+DATASTORE_PATH = os.path.dirname(TESTS_PATH) + '/src'
 sys.path.insert(0, DATASTORE_PATH)
 
 from ers.api import ERS
@@ -77,6 +77,7 @@ def store_journal_data(journal_entries):
         start = time.time()
         metadatastore.store(entry['uid'], entry)
         times.append(time.time()-start)
+        print time.time()-start
         
     return times
     
@@ -92,9 +93,9 @@ if __name__ == '__main__':
         timing = store_journal_data(journal)
         timings.append(timing)
     
-    # Save the output
-    with open('journal_stats.csv', 'wb') as csvfile:
-        writer = csv.writer(csvfile)
-        for timing in timings:
-            writer.writerow(timing)
+        # Save the output
+        with open('journal_stats.csv', 'wb') as csvfile:
+            writer = csv.writer(csvfile)
+            for timing in timings:
+                writer.writerow(timing)
     
