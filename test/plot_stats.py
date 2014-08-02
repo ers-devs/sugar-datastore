@@ -24,7 +24,7 @@ def plot(data_name):
         means.append(m)
 
     # Bag the results
-    x = [int(round(x)) for x in numpy.logspace(0.1, 3, num=30, endpoint=True)]
+    x = [int(round(x)) for x in numpy.logspace(0.1, 3, num=10, endpoint=True)]
     y = []
     for index_x in range(0, len(x)):
         start = x[index_x-1]-1 if index_x > 0 else 0
